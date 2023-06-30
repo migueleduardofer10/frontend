@@ -2,16 +2,20 @@ package com.youtube.ecommerce.entity;
 
 import javax.persistence.*;
 import java.util.Set;
-
-@Table(name = "users")
 @Entity
+@Table(name = "users")
 public class User {
-
     @Id
     private String userName;
+
     private String userFirstName;
     private String userLastName;
     private String userPassword;
+
+    @Column(name = "verification_code", length = 64)
+    private String verificationCode;
+
+    private boolean enabled;
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinTable(name = "USER_ROLE",
             joinColumns = {
@@ -61,5 +65,21 @@ public class User {
 
     public void setRole(Set<Role> role) {
         this.role = role;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }

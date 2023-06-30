@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Verification</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #f5f9f4;
+            font-family: 'Open Sans', sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 100px;
+        }
+        .message {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
+        }
+        a {
+            color: #ffffff;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        a:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<div class="container text-center">
+    <div class="message">
+        <h3>Congratulations, your account has been verified.</h3>
+        <h4><a th:href="@{/login}">Click here to Login</a></h4>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

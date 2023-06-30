@@ -51,13 +51,31 @@ public class JwtService implements UserDetailsService {
             return new org.springframework.security.core.userdetails.User(
                     user.getUserName(),
                     user.getUserPassword(),
+                    user.isEnabled(),  // Agregado estado habilitado del usuario
+                    true,
+                    true,
+                    true,
                     getAuthority(user)
             );
         } else {
             throw new UsernameNotFoundException("User not found with username: " + username);
         }
     }
+    /*
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userDao.findById(username).get();
 
+        if (user != null) {
+            return new org.springframework.security.core.userdetails.User(
+                    user.getUserName(),
+                    user.getUserPassword(),
+                    getAuthority(user)
+            );
+        } else {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
+    }
+*/
     private Set getAuthority(User user) {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         user.getRole().forEach(role -> {
