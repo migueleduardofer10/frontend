@@ -1,0 +1,400 @@
+[1mdiff --git a/backend/e-commerce-youtube-main/pom.xml b/backend/e-commerce-youtube-main/pom.xml[m
+[1mindex 8ebfb10..d6150fd 100644[m
+[1m--- a/backend/e-commerce-youtube-main/pom.xml[m
+[1m+++ b/backend/e-commerce-youtube-main/pom.xml[m
+[36m@@ -17,6 +17,14 @@[m
+         <java.version>1.8</java.version>[m
+     </properties>[m
+     <dependencies>[m
+[32m+[m[32m        <dependency>[m
+[32m+[m[32m            <groupId>org.springframework.boot</groupId>[m
+[32m+[m[32m            <artifactId>spring-boot-starter-thymeleaf</artifactId>[m
+[32m+[m[32m        </dependency>[m
+[32m+[m[32m        <dependency>[m
+[32m+[m[32m            <groupId>org.springframework.boot</groupId>[m
+[32m+[m[32m            <artifactId>spring-boot-starter-mail</artifactId>[m
+[32m+[m[32m        </dependency>[m
+         <dependency>[m
+             <groupId>org.springframework.boot</groupId>[m
+             <artifactId>spring-boot-starter</artifactId>[m
+[36m@@ -61,6 +69,11 @@[m
+             <artifactId>jjwt</artifactId>[m
+             <version>0.9.1</version>[m
+         </dependency>[m
+[32m+[m[32m        <dependency>[m
+[32m+[m[32m            <groupId>com.paypal.sdk</groupId>[m
+[32m+[m[32m            <artifactId>rest-api-sdk</artifactId>[m
+[32m+[m[32m            <version>1.14.0</version>[m
+[32m+[m[32m        </dependency>[m
+     </dependencies>[m
+ [m
+     <build>[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/configuration/WebSecurityConfiguration.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/configuration/WebSecurityConfiguration.java[m
+[1mindex fc5a1b6..2e92041 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/configuration/WebSecurityConfiguration.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/configuration/WebSecurityConfiguration.java[m
+[36m@@ -4,6 +4,7 @@[m [mimport org.springframework.beans.factory.annotation.Autowired;[m
+ import org.springframework.context.annotation.Bean;[m
+ import org.springframework.context.annotation.Configuration;[m
+ import org.springframework.http.HttpHeaders;[m
+[32m+[m[32mimport org.springframework.scheduling.annotation.EnableAsync;[m
+ import org.springframework.security.authentication.AuthenticationManager;[m
+ import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;[m
+ import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;[m
+[36m@@ -19,6 +20,7 @@[m [mimport org.springframework.security.web.authentication.UsernamePasswordAuthentic[m
+ @Configuration[m
+ @EnableWebSecurity[m
+ @EnableGlobalMethodSecurity(prePostEnabled = true)[m
+[32m+[m[32m@EnableAsync // Habilitar la ejecución asincrónica[m
+ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {[m
+ [m
+     @Autowired[m
+[36m@@ -40,7 +42,7 @@[m [mpublic class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {[m
+     protected void configure(HttpSecurity httpSecurity) throws Exception {[m
+         httpSecurity.cors();[m
+         httpSecurity.csrf().disable()[m
+[31m-                .authorizeRequests().antMatchers("/authenticate", "/registerNewUser", "/getAllProducts", "/getProductDetailsById/{productId}").permitAll()[m
+[32m+[m[32m                .authorizeRequests().antMatchers("/authenticate", "/registerNewUser", "/getAllProducts", "/getProductDetailsById/{productId}", "/verify").permitAll()[m
+                 .antMatchers(HttpHeaders.ALLOW).permitAll()[m
+                 .anyRequest().authenticated()[m
+                 .and()[m
+[36m@@ -61,4 +63,4 @@[m [mpublic class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {[m
+     public void configureGlobal(AuthenticationManagerBuilder authenticationManagerBuilder) throws Exception {[m
+         authenticationManagerBuilder.userDetailsService(jwtService).passwordEncoder(passwordEncoder());[m
+     }[m
+[31m-}[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/controller/UserController.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/controller/UserController.java[m
+[1mindex bf86b8f..37ff0bd 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/controller/UserController.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/controller/UserController.java[m
+[36m@@ -3,15 +3,17 @@[m [mpackage com.youtube.ecommerce.controller;[m
+ import com.youtube.ecommerce.entity.User;[m
+ import com.youtube.ecommerce.service.UserService;[m
+ import org.springframework.beans.factory.annotation.Autowired;[m
+[32m+[m[32mimport org.springframework.data.repository.query.Param;[m
+ import org.springframework.security.access.prepost.PreAuthorize;[m
+[31m-import org.springframework.web.bind.annotation.GetMapping;[m
+[31m-import org.springframework.web.bind.annotation.PostMapping;[m
+[31m-import org.springframework.web.bind.annotation.RequestBody;[m
+[31m-import org.springframework.web.bind.annotation.RestController;[m
+[32m+[m[32mimport org.springframework.stereotype.Controller;[m
+[32m+[m[32mimport org.springframework.web.bind.annotation.*;[m
+ [m
+ import javax.annotation.PostConstruct;[m
+[32m+[m[32mimport javax.mail.MessagingException;[m
+[32m+[m[32mimport javax.servlet.http.HttpServletRequest;[m
+[32m+[m[32mimport java.io.UnsupportedEncodingException;[m
+ [m
+[31m-@RestController[m
+[32m+[m[32m@Controller[m
+ public class UserController {[m
+ [m
+     @Autowired[m
+[36m@@ -23,10 +25,24 @@[m [mpublic class UserController {[m
+     }[m
+ [m
+     @PostMapping({"/registerNewUser"})[m
+[31m-    public User registerNewUser(@RequestBody User user) {[m
+[31m-        return userService.registerNewUser(user);[m
+[32m+[m[32m    @ResponseBody[m
+[32m+[m[32m    public User registerNewUser(@RequestBody  User user, HttpServletRequest request)[m
+[32m+[m[32m            throws UnsupportedEncodingException, MessagingException {[m
+[32m+[m[32m        return userService.registerNewUser(user, getSiteURL(request));[m
+[32m+[m
+     }[m
+ [m
+[32m+[m[32m    private String getSiteURL(HttpServletRequest request) {[m
+[32m+[m[32m        String siteURL = request.getRequestURL().toString();[m
+[32m+[m[32m        return siteURL.replace(request.getServletPath(), "");[m
+[32m+[m[32m    }[m
+[32m+[m[32m    /*[m
+[32m+[m[32mpublic String processRegister(User user, HttpServletRequest request)[m
+[32m+[m			[32mthrows UnsupportedEncodingException, MessagingException {[m
+[32m+[m		[32mSystem.out.println(user);[m
+[32m+[m		[32mservice.register(user, getSiteURL(request));[m
+[32m+[m		[32mreturn "register_success";[m
+[32m+[m[32m */[m
+     @GetMapping({"/forAdmin"})[m
+     @PreAuthorize("hasRole('Admin')")[m
+     public String forAdmin(){[m
+[36m@@ -38,4 +54,13 @@[m [mpublic class UserController {[m
+     public String forUser(){[m
+         return "This URL is only accessible to the user";[m
+     }[m
+[32m+[m
+[32m+[m[32m    @GetMapping("/verify")[m
+[32m+[m[32m    public String verifyUser(@Param("code") String code) {[m
+[32m+[m[32m        if (userService.verify(code)) {[m
+[32m+[m[32m            return "verify_success";[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            return "verify_fail";[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+ }[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/OrderDetailDao.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/OrderDetailDao.java[m
+[1mindex f380918..13c09eb 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/OrderDetailDao.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/OrderDetailDao.java[m
+[36m@@ -3,9 +3,10 @@[m [mpackage com.youtube.ecommerce.dao;[m
+ import com.youtube.ecommerce.entity.OrderDetail;[m
+ import com.youtube.ecommerce.entity.User;[m
+ import org.springframework.data.repository.CrudRepository;[m
+[32m+[m[32mimport org.springframework.stereotype.Repository;[m
+ [m
+ import java.util.List;[m
+[31m-[m
+[32m+[m[32m@Repository[m
+ public interface OrderDetailDao extends CrudRepository<OrderDetail, Integer> {[m
+     public List<OrderDetail> findByUser(User user);[m
+ [m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/UserDao.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/UserDao.java[m
+[1mindex cadb140..740b6d3 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/UserDao.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/dao/UserDao.java[m
+[36m@@ -1,9 +1,15 @@[m
+ package com.youtube.ecommerce.dao;[m
+ [m
+ import com.youtube.ecommerce.entity.User;[m
+[32m+[m[32mimport org.springframework.data.jpa.repository.Query;[m
+ import org.springframework.data.repository.CrudRepository;[m
+ import org.springframework.stereotype.Repository;[m
+ [m
+ @Repository[m
+ public interface UserDao extends CrudRepository<User, String> {[m
+[32m+[m[32m    @Query("SELECT u FROM User u WHERE u.userName = ?1")[m
+[32m+[m[32m    public User findByEmail(String email);[m
+[32m+[m
+[32m+[m[32m    @Query("SELECT u FROM User u WHERE u.verificationCode = ?1")[m
+[32m+[m[32m    public User findByVerificationCode(String code);[m
+ }[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/CustomUserDetails.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/CustomUserDetails.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..c900192[m
+[1m--- /dev/null[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/CustomUserDetails.java[m
+[36m@@ -0,0 +1,55 @@[m
+[32m+[m[32mpackage com.youtube.ecommerce.entity;[m
+[32m+[m
+[32m+[m[32mimport org.springframework.security.core.GrantedAuthority;[m
+[32m+[m[32mimport org.springframework.security.core.userdetails.UserDetails;[m
+[32m+[m
+[32m+[m[32mimport java.util.Collection;[m
+[32m+[m
+[32m+[m[32mpublic class CustomUserDetails implements UserDetails {[m
+[32m+[m
+[32m+[m[32m    private User user;[m
+[32m+[m
+[32m+[m[32m    public CustomUserDetails(User user) {[m
+[32m+[m[32m        this.user = user;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public Collection<? extends GrantedAuthority> getAuthorities() {[m
+[32m+[m[32m        return null;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public String getPassword() {[m
+[32m+[m[32m        return user.getUserPassword();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public String getUsername() {[m
+[32m+[m[32m        return user.getUserName();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public boolean isAccountNonExpired() {[m
+[32m+[m[32m        return true;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public boolean isAccountNonLocked() {[m
+[32m+[m[32m        return true;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public boolean isCredentialsNonExpired() {[m
+[32m+[m[32m        return true;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public boolean isEnabled() {[m
+[32m+[m[32m        return user.isEnabled();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public String getFullName() {[m
+[32m+[m[32m        return user.getUserFirstName() + " " + user.getUserLastName();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m}[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/User.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/User.java[m
+[1mindex 9045db5..101d580 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/User.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/entity/User.java[m
+[36m@@ -2,16 +2,20 @@[m [mpackage com.youtube.ecommerce.entity;[m
+ [m
+ import javax.persistence.*;[m
+ import java.util.Set;[m
+[31m-[m
+[31m-@Table(name = "users")[m
+ @Entity[m
+[32m+[m[32m@Table(name = "users")[m
+ public class User {[m
+[31m-[m
+     @Id[m
+     private String userName;[m
+[32m+[m
+     private String userFirstName;[m
+     private String userLastName;[m
+     private String userPassword;[m
+[32m+[m
+[32m+[m[32m    @Column(name = "verification_code", length = 64)[m
+[32m+[m[32m    private String verificationCode;[m
+[32m+[m
+[32m+[m[32m    private boolean enabled;[m
+     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)[m
+     @JoinTable(name = "USER_ROLE",[m
+             joinColumns = {[m
+[36m@@ -62,4 +66,20 @@[m [mpublic class User {[m
+     public void setRole(Set<Role> role) {[m
+         this.role = role;[m
+     }[m
+[32m+[m
+[32m+[m[32m    public String getVerificationCode() {[m
+[32m+[m[32m        return verificationCode;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void setVerificationCode(String verificationCode) {[m
+[32m+[m[32m        this.verificationCode = verificationCode;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public boolean isEnabled() {[m
+[32m+[m[32m        return enabled;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    public void setEnabled(boolean enabled) {[m
+[32m+[m[32m        this.enabled = enabled;[m
+[32m+[m[32m    }[m
+ }[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/CustomUserDetailsService.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/CustomUserDetailsService.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..aae707f[m
+[1m--- /dev/null[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/CustomUserDetailsService.java[m
+[36m@@ -0,0 +1,27 @@[m
+[32m+[m[32mpackage com.youtube.ecommerce.service;[m
+[32m+[m
+[32m+[m[32mimport com.youtube.ecommerce.dao.UserDao;[m
+[32m+[m[32mimport com.youtube.ecommerce.entity.CustomUserDetails;[m
+[32m+[m[32mimport com.youtube.ecommerce.entity.User;[m
+[32m+[m[32mimport org.springframework.beans.factory.annotation.Autowired;[m
+[32m+[m[32mimport org.springframework.security.core.userdetails.UserDetails;[m
+[32m+[m[32mimport org.springframework.security.core.userdetails.UserDetailsService;[m
+[32m+[m[32mimport org.springframework.security.core.userdetails.UsernameNotFoundException;[m
+[32m+[m[32mimport org.springframework.stereotype.Service;[m
+[32m+[m
+[32m+[m[32m@Service[m
+[32m+[m[32mpublic class CustomUserDetailsService implements UserDetailsService {[m
+[32m+[m
+[32m+[m[32m    @Autowired[m
+[32m+[m[32m    private UserDao userRepo;[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {[m
+[32m+[m[32m        User user = userRepo.findByEmail(username);[m
+[32m+[m[32m        if (user == null) {[m
+[32m+[m[32m            throw new UsernameNotFoundException("User not found");[m
+[32m+[m[32m        }[m
+[32m+[m[32m        return new CustomUserDetails(user);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m}[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/JwtService.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/JwtService.java[m
+[1mindex ca7c04f..fe48d98 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/JwtService.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/JwtService.java[m
+[36m@@ -51,13 +51,31 @@[m [mpublic class JwtService implements UserDetailsService {[m
+             return new org.springframework.security.core.userdetails.User([m
+                     user.getUserName(),[m
+                     user.getUserPassword(),[m
+[32m+[m[32m                    user.isEnabled(),  // Agregado estado habilitado del usuario[m
+[32m+[m[32m                    true,[m
+[32m+[m[32m                    true,[m
+[32m+[m[32m                    true,[m
+                     getAuthority(user)[m
+             );[m
+         } else {[m
+             throw new UsernameNotFoundException("User not found with username: " + username);[m
+         }[m
+     }[m
+[32m+[m[32m    /*[m
+[32m+[m[32m    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {[m
+[32m+[m[32m        User user = userDao.findById(username).get();[m
+ [m
+[32m+[m[32m        if (user != null) {[m
+[32m+[m[32m            return new org.springframework.security.core.userdetails.User([m
+[32m+[m[32m                    user.getUserName(),[m
+[32m+[m[32m                    user.getUserPassword(),[m
+[32m+[m[32m                    getAuthority(user)[m
+[32m+[m[32m            );[m
+[32m+[m[32m        } else {[m
+[32m+[m[32m            throw new UsernameNotFoundException("User not found with username: " + username);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m*/[m
+     private Set getAuthority(User user) {[m
+         Set<SimpleGrantedAuthority> authorities = new HashSet<>();[m
+         user.getRole().forEach(role -> {[m
+[1mdiff --git a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/UserService.java b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/UserService.java[m
+[1mindex b4fe495..7b18957 100644[m
+[1m--- a/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/UserService.java[m
+[1m+++ b/backend/e-commerce-youtube-main/src/main/java/com/youtube/ecommerce/service/UserService.java[m
+[36m@@ -4,11 +4,18 @@[m [mimport com.youtube.ecommerce.dao.RoleDao;[m
+ import com.youtube.ecommerce.dao.UserDao;[m
+ import com.youtube.ecommerce.entity.Role;[m
+ import com.youtube.ecommerce.entity.User;[m
+[32m+[m[32mimport net.bytebuddy.utility.RandomString;[m
+ import org.springframework.beans.factory.annotation.Autowired;[m
+[32m+[m[32mimport org.springframework.mail.javamail.JavaMailSender;[m
+[32m+[m[32mimport org.springframework.mail.javamail.MimeMessageHelper;[m
+[32m+[m[32mimport org.springframework.scheduling.annotation.Async;[m
+ import org.springframework.security.crypto.password.PasswordEncoder;[m
+ import org.springframework.stereotype.Service;[m
+ import org.springframework.transaction.annotation.Transactional;[m
+ [m
+[32m+[m[32mimport javax.mail.MessagingException;[m
+[32m+[m[32mimport javax.mail.internet.MimeMessage;[m
+[32m+[m[32mimport java.io.UnsupportedEncodingException;[m
+ import java.util.HashSet;[m
+ import java.util.Set;[m
+ [m
+[36m@@ -24,6 +31,8 @@[m [mpublic class UserService {[m
+     @Autowired[m
+     private PasswordEncoder passwordEncoder;[m
+ [m
+[32m+[m[32m    @Autowired[m
+[32m+[m[32m    private JavaMailSender mailSender;[m
+     @Transactional[m
+     public void initRoleAndUser() {[m
+ [m
+[36m@@ -58,16 +67,68 @@[m [mpublic class UserService {[m
+         userDao.save(user);[m
+     }[m
+ [m
+[31m-    public User registerNewUser(User user) {[m
+[32m+[m[32m    @Async[m
+[32m+[m[32m    public User registerNewUser(User user, String siteURL) throws UnsupportedEncodingException, MessagingException {[m
+         Role role = roleDao.findById("User").get();[m
+         Set<Role> userRoles = new HashSet<>();[m
+         userRoles.add(role);[m
+         user.setRole(userRoles);[m
+         user.setUserPassword(getEncodedPassword(user.getUserPassword()));[m
+ [m
+[32m+[m[32m        String randomCode = RandomString.make(64);[m
+[32m+[m[32m        user.setVerificationCode(randomCode);[m
+[32m+[m[32m        user.setEnabled(false);[m
+[32m+[m[32m        sendVerificationEmail(user, siteURL);[m
+         return userDao.s
