@@ -6,7 +6,7 @@ import { OrderDetails } from '../_model/order-details.model';
 import { Product } from '../_model/product.model';
 import { ProductService } from '../_services/product.service';
 
-declare var Razorpay: any;
+declare var paypal: any;
 @Component({
   selector: 'app-buy-product',
   templateUrl: './buy-product.component.html',
@@ -115,38 +115,32 @@ export class BuyProductComponent implements OnInit {
   }
 
   openTransactioModal(response: any, orderForm: NgForm) {
-    var options = {
-      order_id: response.orderId,
-      key: response.key,
-      amount: response.amount,
-      currency: response.currency,
-      name: 'Learn programming yourself',
-      description: 'Payment of online shopping',
-      image: 'https://cdn.pixabay.com/photo/2023/01/22/13/46/swans-7736415_640.jpg',
-      handler: (response: any) => {
-        if(response!= null && response.razorpay_payment_id != null) {
-          this.processResponse(response, orderForm);
-        } else {
-          alert("Payment failed..")
-        }
-       
+    const totalAmount = this.getCalculatedGrandTotal();
+    paypal.Buttons({
+      createOrder: (data, actions) => {
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              value: totalAmount,
+              currency: 'USD'  // Use your desired currency
+            }
+          }]
+        });
       },
-      prefill : {
-        name:'LPY',
-        email: 'LPY@GMAIL.COM',
-        contact: '90909090'
+      onApprove: (data, actions) => {
+        return actions.order.capture().then((details) => {
+          console.log(details);
+          this.orderDetails.transactionId = details.id;
+          this.placeOrder(orderForm);
+        });
       },
-      notes: {
-        address: 'Online Shopping'
-      },
-      theme: {
-        color: '#F37254'
+      onError: (err) => {
+        console.log(err);
+        alert('Payment failed..')
       }
-    };
-
-    var razorPayObject = new Razorpay(options);
-    razorPayObject.open();
+    }).render('#paypal-button-container');
   }
+
 
   processResponse(resp: any, orderForm:NgForm) {
     this.orderDetails.transactionId = resp.razorpay_payment_id;

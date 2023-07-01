@@ -1,5 +1,11 @@
 package com.youtube.ecommerce.service;
 
+import com.paypal.api.payments.Amount;
+import com.paypal.api.payments.Payer;
+import com.paypal.api.payments.Payment;
+import com.paypal.api.payments.Transaction;
+import com.paypal.base.rest.APIContext;
+import com.paypal.base.rest.PayPalRESTException;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.youtube.ecommerce.configuration.JwtRequestFilter;
@@ -20,8 +26,9 @@ public class OrderDetailService {
 
     private static final String ORDER_PLACED = "Placed";
 
-    private static final String KEY = "rzp_test_AXBzvN2fkD4ESK";
-    private static final String KEY_SECRET = "bsZmiVD7p1GMo6hAWiy4SHSH";
+    private static final String CLIENT_ID = "AXrQC6oTYxQ7lKkgmU0Q6vEZXcczAE2xRUULDSawrlStC3usul_VME8cXdmv7MrTY0E58WGivKpSKfWw";
+    private static final String CLIENT_SECRET = "EIN05s3ebkdOopvYb8WcAexHxPS8k-9BvpFq7sDPEO3fSKVvEekdpEYciO3LQfD4VMWefJ_SnXwA2Zx_";
+    private static final String MODE = "sandbox";  // cambiar a "live" cuando esté listo para el entorno de producción
     private static final String CURRENCY = "INR";
 
     @Autowired
@@ -102,30 +109,55 @@ public class OrderDetailService {
     }
 
     public TransactionDetails createTransaction(Double amount) {
+        // Credentials for PayPal
+        String clientId = "your_client_id";
+        String clientSecret = "your_client_secret";
+
+        // Creating an APIContext object
+        APIContext apiContext = new APIContext(clientId, clientSecret, "sandbox");
+
+        Amount amnt = new Amount();
+        amnt.setCurrency("USD");
+        amnt.setTotal(String.format("%.2f", amount));
+
+        Transaction transaction = new Transaction();
+        transaction.setAmount(amnt);
+
+        List<Transaction> transactions = new ArrayList<>();
+        transactions.add(transaction);
+
+        Payer payer = new Payer();
+        payer.setPaymentMethod("paypal");
+
+        Payment payment = new Payment();
+        payment.setIntent("sale");
+        payment.setPayer(payer);
+        payment.setTransactions(transactions);
+
         try {
+            Payment createdPayment = payment.create(apiContext);
+            String paypalPaymentId = createdPayment.getId();
+            // TODO: save the paymentId to the database for verification later
 
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("amount", (amount * 100) );
-            jsonObject.put("currency", CURRENCY);
-
-            RazorpayClient razorpayClient = new RazorpayClient(KEY, KEY_SECRET);
-
-            Order order = razorpayClient.orders.create(jsonObject);
-
-            TransactionDetails transactionDetails =  prepareTransactionDetails(order);
+            TransactionDetails transactionDetails = new TransactionDetails(paypalPaymentId, "USD", (int)(amount * 100), clientId);
             return transactionDetails;
-        } catch (Exception e) {
+
+        } catch (PayPalRESTException e) {
             System.out.println(e.getMessage());
         }
         return null;
     }
 
-    private TransactionDetails prepareTransactionDetails(Order order) {
-        String orderId = order.get("id");
-        String currency = order.get("currency");
-        Integer amount = order.get("amount");
+    private TransactionDetails prepareTransactionDetails(Payment payment) {
+        // Aquí adaptas el objeto Payment a tu clase TransactionDetails
+        // Deberías modificar este método según tus necesidades.
+        String paymentId = payment.getId();
+        String currency = payment.getTransactions().get(0).getAmount().getCurrency();
+        Integer amount = Integer.parseInt(payment.getTransactions().get(0).getAmount().getTotal());
 
-        TransactionDetails transactionDetails = new TransactionDetails(orderId, currency, amount, KEY);
+        TransactionDetails transactionDetails = new TransactionDetails(paymentId, currency, amount, CLIENT_ID);
         return transactionDetails;
     }
+
 }
+
