@@ -1,7 +1,7 @@
 package com.youtube.ecommerce.service;
 
 import com.youtube.ecommerce.dao.UserDao;
-import com.youtube.ecommerce.entity.CustomUserDetails;
+import com.youtube.ecommerce.dto.CustomUserDetails;
 import com.youtube.ecommerce.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

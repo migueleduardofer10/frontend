@@ -1,8 +1,8 @@
 package com.youtube.ecommerce.controller;
 
+import com.youtube.ecommerce.dto.OrderInput;
+import com.youtube.ecommerce.dto.TransactionDetails;
 import com.youtube.ecommerce.entity.OrderDetail;
-import com.youtube.ecommerce.entity.OrderInput;
-import com.youtube.ecommerce.entity.TransactionDetails;
 import com.youtube.ecommerce.service.OrderDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;

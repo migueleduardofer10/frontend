@@ -1,5 +1,6 @@
-package com.youtube.ecommerce.entity;
+package com.youtube.ecommerce.dto;
 
+import com.youtube.ecommerce.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

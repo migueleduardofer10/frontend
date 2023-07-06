@@ -1,4 +1,6 @@
-package com.youtube.ecommerce.entity;
+package com.youtube.ecommerce.dto;
+
+import com.youtube.ecommerce.entity.User;
 
 public class JwtResponse {
 

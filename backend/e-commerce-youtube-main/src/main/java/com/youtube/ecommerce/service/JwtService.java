@@ -1,8 +1,8 @@
 package com.youtube.ecommerce.service;
 
 import com.youtube.ecommerce.dao.UserDao;
-import com.youtube.ecommerce.entity.JwtRequest;
-import com.youtube.ecommerce.entity.JwtResponse;
+import com.youtube.ecommerce.dto.JwtRequest;
+import com.youtube.ecommerce.dto.JwtResponse;
 import com.youtube.ecommerce.entity.User;
 import com.youtube.ecommerce.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;

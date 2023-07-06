@@ -1,7 +1,7 @@
 package com.youtube.ecommerce.controller;
 
-import com.youtube.ecommerce.entity.JwtRequest;
-import com.youtube.ecommerce.entity.JwtResponse;
+import com.youtube.ecommerce.dto.JwtRequest;
+import com.youtube.ecommerce.dto.JwtResponse;
 import com.youtube.ecommerce.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
