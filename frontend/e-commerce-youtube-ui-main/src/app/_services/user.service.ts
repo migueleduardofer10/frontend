@@ -15,24 +15,23 @@ export class UserService {
   ) {}
 
   public register(registerData) {
-    return this.httpclient.post(this.PATH_OF_API + '/registerNewUser', registerData);
+    return this.httpclient.post(this.PATH_OF_API + '/users', registerData);
   }
 
   public login(loginData) {
-    return this.httpclient.post(this.PATH_OF_API + '/authenticate', loginData, {
+    return this.httpclient.post(this.PATH_OF_API + '/jwt/authenticate', loginData, {
       headers: this.requestHeader,
     });
   }
 
   public forUser() {
-    return this.httpclient.get(this.PATH_OF_API + '/forUser', {
+    return this.httpclient.get(this.PATH_OF_API + '/users/user', {
       responseType: 'text',
     });
   }
 
-
   public forAdmin() {
-    return this.httpclient.get(this.PATH_OF_API + '/forAdmin', {
+    return this.httpclient.get(this.PATH_OF_API + '/users/admin', {
       responseType: 'text',
     });
   }

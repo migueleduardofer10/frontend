@@ -15,7 +15,6 @@ import java.io.UnsupportedEncodingException;
 
 @Controller
 public class UserController {
-
     @Autowired
     private UserService userService;
 
@@ -24,34 +23,29 @@ public class UserController {
         userService.initRoleAndUser();
     }
 
-    @PostMapping({"/registerNewUser"})
+    @PostMapping("/users")
     @ResponseBody
-    public User registerNewUser(@RequestBody  User user, HttpServletRequest request)
+    public User registerNewUser(@RequestBody User user, HttpServletRequest request)
             throws UnsupportedEncodingException, MessagingException {
         return userService.registerNewUser(user, getSiteURL(request));
-
     }
 
     private String getSiteURL(HttpServletRequest request) {
         String siteURL = request.getRequestURL().toString();
         return siteURL.replace(request.getServletPath(), "");
     }
-    /*
-public String processRegister(User user, HttpServletRequest request)
-			throws UnsupportedEncodingException, MessagingException {
-		System.out.println(user);
-		service.register(user, getSiteURL(request));
-		return "register_success";
- */
-    @GetMapping({"/forAdmin"})
+
+    @GetMapping("/users/admin")
     @PreAuthorize("hasRole('Admin')")
-    public String forAdmin(){
+    @ResponseBody
+    public String forAdmin() {
         return "This URL is only accessible to the admin";
     }
 
-    @GetMapping({"/forUser"})
+    @GetMapping("/users/user")
     @PreAuthorize("hasRole('User')")
-    public String forUser(){
+    @ResponseBody
+    public String forUser() {
         return "This URL is only accessible to the user";
     }
 
@@ -63,4 +57,5 @@ public String processRegister(User user, HttpServletRequest request)
             return "verify_fail";
         }
     }
+
 }

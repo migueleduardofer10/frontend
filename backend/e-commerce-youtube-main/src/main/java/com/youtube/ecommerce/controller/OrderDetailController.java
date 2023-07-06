@@ -17,33 +17,34 @@ public class OrderDetailController {
     private OrderDetailService orderDetailService;
 
     @PreAuthorize("hasRole('User')")
-    @PostMapping({"/placeOrder/{isSingleProductCheckout}"})
+    @PostMapping("/orders/{isSingleProductCheckout}")
     public void placeOrder(@PathVariable(name = "isSingleProductCheckout") boolean isSingleProductCheckout,
-            @RequestBody OrderInput orderInput) {
+                           @RequestBody OrderInput orderInput) {
         orderDetailService.placeOrder(orderInput, isSingleProductCheckout);
     }
 
     @PreAuthorize("hasRole('User')")
-    @GetMapping({"/getOrderDetails"})
+    @GetMapping("/orders")
     public List<OrderDetail> getOrderDetails() {
         return orderDetailService.getOrderDetails();
     }
 
     @PreAuthorize("hasRole('Admin')")
-    @GetMapping({"/getAllOrderDetails/{status}"})
+    @GetMapping("/orders/{status}")
     public List<OrderDetail> getAllOrderDetails(@PathVariable(name = "status") String status) {
         return orderDetailService.getAllOrderDetails(status);
     }
 
     @PreAuthorize("hasRole('Admin')")
-    @GetMapping({"/markOrderAsDelivered/{orderId}"})
+    @GetMapping("/orders/{orderId}/deliver")
     public void markOrderAsDelivered(@PathVariable(name = "orderId") Integer orderId) {
         orderDetailService.markOrderAsDelivered(orderId);
     }
 
     @PreAuthorize("hasRole('User')")
-    @GetMapping({"/createTransaction/{amount}"})
+    @GetMapping("/transactions/{amount}")
     public TransactionDetails createTransaction(@PathVariable(name = "amount") Double amount) {
         return orderDetailService.createTransaction(amount);
     }
+
 }

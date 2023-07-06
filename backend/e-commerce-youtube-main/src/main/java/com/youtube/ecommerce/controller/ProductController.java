@@ -21,7 +21,7 @@ public class ProductController {
     private ProductService productService;
 
     @PreAuthorize("hasRole('Admin')")
-    @PostMapping(value = {"/addNewProduct"}, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = {"/products"}, consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public Product addNewProduct(@RequestPart("product") Product product,
                                  @RequestPart("imageFile") MultipartFile[] file) {
         try {
@@ -50,7 +50,7 @@ public class ProductController {
         return imageModels;
     }
 
-    @GetMapping({"/getAllProducts"})
+    @GetMapping("/products")
     public List<Product> getAllProducts(@RequestParam(defaultValue = "0") int pageNumber,
                                         @RequestParam(defaultValue = "") String searchKey) {
         List<Product> result = productService.getAllProducts(pageNumber, searchKey);
@@ -58,21 +58,22 @@ public class ProductController {
         return result;
     }
 
-    @GetMapping({"/getProductDetailsById/{productId}"})
+    @GetMapping("/products/{productId}")
     public Product getProductDetailsById(@PathVariable("productId") Integer productId) {
         return productService.getProductDetailsById(productId);
     }
 
     @PreAuthorize("hasRole('Admin')")
-    @DeleteMapping({"/deleteProductDetails/{productId}"})
+    @DeleteMapping("/products/{productId}")
     public void deleteProductDetails(@PathVariable("productId") Integer productId) {
         productService.deleteProductDetails(productId);
     }
 
     @PreAuthorize("hasRole('User')")
-    @GetMapping({"/getProductDetails/{isSingleProductCheckout}/{productId}"})
+    @GetMapping("/products/{isSingleProductCheckout}/{productId}")
     public List<Product> getProductDetails(@PathVariable(name = "isSingleProductCheckout" ) boolean isSingleProductCheckout,
                                            @PathVariable(name = "productId")  Integer productId) {
         return productService.getProductDetails(isSingleProductCheckout, productId);
     }
+
 }

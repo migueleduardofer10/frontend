@@ -18,19 +18,19 @@ public class CartController {
     private CartService cartService;
 
     @PreAuthorize("hasRole('User')")
-    @GetMapping({"/addToCart/{productId}"})
+    @GetMapping("/carts/{productId}")
     public Cart addToCart(@PathVariable(name = "productId") Integer productId) {
         return cartService.addToCart(productId);
     }
 
     @PreAuthorize("hasRole('User')")
-    @DeleteMapping({"/deleteCartItem/{cartId}"})
+    @DeleteMapping("/carts/{cartId}")
     public void deleteCartItem(@PathVariable(name = "cartId") Integer cartId) {
         cartService.deleteCartItem(cartId);
     }
 
     @PreAuthorize("hasRole('User')")
-    @GetMapping({"/getCartDetails"})
+    @GetMapping("/carts")
     public List<Cart> getCartDetails() {
         return cartService.getCartDetails();
     }
