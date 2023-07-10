@@ -1,9 +1,9 @@
 package com.youtube.ecommerce.service;
 
 import com.youtube.ecommerce.configuration.JwtRequestFilter;
-import com.youtube.ecommerce.dao.CartDao;
-import com.youtube.ecommerce.dao.ProductDao;
-import com.youtube.ecommerce.dao.UserDao;
+import com.youtube.ecommerce.repository.CartDao;
+import com.youtube.ecommerce.repository.ProductDao;
+import com.youtube.ecommerce.repository.UserDao;
 import com.youtube.ecommerce.entity.Cart;
 import com.youtube.ecommerce.entity.Product;
 import com.youtube.ecommerce.entity.User;

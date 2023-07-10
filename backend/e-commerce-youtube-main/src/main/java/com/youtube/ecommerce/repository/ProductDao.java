@@ -1,4 +1,4 @@
-package com.youtube.ecommerce.dao;
+package com.youtube.ecommerce.repository;
 
 import com.youtube.ecommerce.entity.Product;
 import org.springframework.data.domain.Pageable;

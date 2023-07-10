@@ -34,11 +34,11 @@ export class ProductService {
   }
 
   public addProduct(product: FormData) {
-    return this.httpClient.post<Product>("http://localhost:9090/products", product);
+    return this.httpClient.post<Product>("http://localhost:8080/products", product);
   }
 
   public getAllProducts(pageNumber, searchKeyword: string = "") {
-    return this.httpClient.get<Product[]>("http://localhost:9090/products?pageNumber=" + pageNumber + "&searchKey=" + searchKeyword);
+    return this.httpClient.get<Product[]>("http://localhost:8080/products?pageNumber=" + pageNumber + "&searchKey=" + searchKeyword);
   }
 
   public getProductDetailsById(productId) {

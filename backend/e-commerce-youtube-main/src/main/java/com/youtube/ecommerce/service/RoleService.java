@@ -1,6 +1,6 @@
 package com.youtube.ecommerce.service;
 
-import com.youtube.ecommerce.dao.RoleDao;
+import com.youtube.ecommerce.repository.RoleDao;
 import com.youtube.ecommerce.entity.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

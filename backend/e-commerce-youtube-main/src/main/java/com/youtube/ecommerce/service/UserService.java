@@ -1,7 +1,7 @@
 package com.youtube.ecommerce.service;
 
-import com.youtube.ecommerce.dao.RoleDao;
-import com.youtube.ecommerce.dao.UserDao;
+import com.youtube.ecommerce.repository.RoleDao;
+import com.youtube.ecommerce.repository.UserDao;
 import com.youtube.ecommerce.entity.Role;
 import com.youtube.ecommerce.entity.User;
 import net.bytebuddy.utility.RandomString;
@@ -128,7 +128,6 @@ public class UserService {
 
             return true;
         }
-
     }
 
     public String getEncodedPassword(String password) {

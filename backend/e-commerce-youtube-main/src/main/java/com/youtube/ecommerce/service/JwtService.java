@@ -1,6 +1,6 @@
 package com.youtube.ecommerce.service;
 
-import com.youtube.ecommerce.dao.UserDao;
+import com.youtube.ecommerce.repository.UserDao;
 import com.youtube.ecommerce.dto.JwtRequest;
 import com.youtube.ecommerce.dto.JwtResponse;
 import com.youtube.ecommerce.entity.User;
