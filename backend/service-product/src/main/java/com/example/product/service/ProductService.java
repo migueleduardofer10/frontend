@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductService {
@@ -53,5 +54,10 @@ public class ProductService {
             // Since we can't access the user's cart in this microservice, we return null or throw an exception
             throw new UnsupportedOperationException("Cannot handle cart operations in Product microservice.");
         }
+    }
+
+    public Product findById(Integer productId) {
+        Optional<Product> product = productDao.findById(productId);
+        return product.orElse(null);
     }
 }

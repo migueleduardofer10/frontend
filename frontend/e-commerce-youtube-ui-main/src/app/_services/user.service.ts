@@ -18,6 +18,20 @@ export class UserService {
     return this.httpclient.post(this.PATH_OF_API + '/users', registerData);
   }
 
+  
+
+  public getCurrentUser() {
+    let token = this.userAuthService.getToken();
+    console.log('Token:', token);  // Log the token
+    let headers = new HttpHeaders().set("Authorization", "Bearer " + token);
+    return this.httpclient.get(this.PATH_OF_API + '/me', { headers: headers });
+  }
+  
+
+
+
+
+
   public login(loginData) {
     return this.httpclient.post(this.PATH_OF_API + '/jwt/authenticate', loginData, {
       headers: this.requestHeader,

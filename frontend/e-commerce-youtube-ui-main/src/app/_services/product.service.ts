@@ -30,15 +30,15 @@ export class ProductService {
   }
 
   public deleteCartItem(cartId) {
-    return this.httpClient.delete("http://localhost:9090/carts/" + cartId);
+    return this.httpClient.delete("http://localhost:8888/carts/" + cartId);
   }
 
   public addProduct(product: FormData) {
-    return this.httpClient.post<Product>("http://localhost:8080/products", product);
+    return this.httpClient.post<Product>("http://localhost:9090/products", product);
   }
 
   public getAllProducts(pageNumber, searchKeyword: string = "") {
-    return this.httpClient.get<Product[]>("http://localhost:8080/products?pageNumber=" + pageNumber + "&searchKey=" + searchKeyword);
+    return this.httpClient.get<Product[]>("http://localhost:9090/products?pageNumber=" + pageNumber + "&searchKey=" + searchKeyword);
   }
 
   public getProductDetailsById(productId) {
@@ -57,11 +57,21 @@ export class ProductService {
     return this.httpClient.post("http://localhost:9090/orders/" + isCartCheckout, orderDetails);
   }
 
-  public addToCart(productId) {
-    return this.httpClient.get("http://localhost:9090/carts/" + productId);
+  addToCart(userName: string, productId: number) {
+    console.log(productId);
+    console.log(userName); 
+    const url = `http://localhost:8888/carts/${userName}/${productId}`;
+    return this.httpClient.get(url);
   }
 
-  public getCartDetails() {
-    return this.httpClient.get("http://localhost:9090/carts");
+  
+  
+
+  //GET cART DETAILS Y ENVIA COMO PATH VARIABLE EL USERNAME
+  public getCartDetails(userName: string) {
+    console.log(userName);
+    const url = `http://localhost:8888/carts/${userName}`;
+    return this.httpClient.get(url);
   }
+  
 }
