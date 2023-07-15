@@ -5,23 +5,23 @@
     <mat-button-toggle value="Delivered" (click)="getAllOrderDetailsForAdmin('Delivered')" >Delivered</mat-button-toggle>
   </mat-button-toggle-group>
 
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8 mt-3">
-
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 mt-3">
+    <!-- ID Column -->
     <ng-container matColumnDef="Id">
       <th mat-header-cell *matHeaderCellDef> Id </th>
       <td mat-cell *matCellDef="let element"> {{element.orderId}} </td>
     </ng-container>
   
-    <!-- Product Name Column -->
-    <ng-container matColumnDef="Product Name">
-      <th mat-header-cell *matHeaderCellDef> Product Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.product.productName}} </td>
+    <!-- Product Id Column -->
+    <ng-container matColumnDef="Product Id">
+      <th mat-header-cell *matHeaderCellDef> Product Id </th>
+      <td mat-cell *matCellDef="let element"> {{element.productId}} </td>
     </ng-container>
   
-    <!-- Name Column -->
-    <ng-container matColumnDef="Name">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let element"> {{element.user.userFirstName}} </td>
+    <!-- User Name Column -->
+    <ng-container matColumnDef="User Name">
+      <th mat-header-cell *matHeaderCellDef> User Name </th>
+      <td mat-cell *matCellDef="let element"> {{element.userName}} </td>
     </ng-container>
   
     <!-- Address Column -->
@@ -30,26 +30,26 @@
       <td mat-cell *matCellDef="let element"> {{element.orderFullOrder}} </td>
     </ng-container>
 
-     <!-- Contact No. Column -->
-     <ng-container matColumnDef="Contact No.">
-        <th mat-header-cell *matHeaderCellDef> Contact No. </th>
-        <td mat-cell *matCellDef="let element"> {{element.orderContactNumber}} </td>
-      </ng-container>
+    <!-- Contact No. Column -->
+    <ng-container matColumnDef="Contact No.">
+      <th mat-header-cell *matHeaderCellDef> Contact No. </th>
+      <td mat-cell *matCellDef="let element"> {{element.orderContactNumber}} </td>
+    </ng-container>
 
-       <!-- orderStatus Column -->
-     <ng-container matColumnDef="Status">
-        <th mat-header-cell *matHeaderCellDef> Status </th>
-        <td mat-cell *matCellDef="let element"> {{element.orderStatus}} </td>
-      </ng-container>
+    <!-- Status Column -->
+    <ng-container matColumnDef="Status">
+      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <td mat-cell *matCellDef="let element"> {{element.orderStatus}} </td>
+    </ng-container>
 
-       <!-- Action Column -->
-     <ng-container matColumnDef="Action">
+    <!-- Action Column -->
+    <ng-container matColumnDef="Action">
       <th mat-header-cell *matHeaderCellDef> Action </th>
       <td mat-cell *matCellDef="let element"> 
-          <button *ngIf="element.orderStatus == 'Placed'" mat-raised-button color="primary" (click)="markAsDelivered(element.orderId)">Mark as Delivered</button>  
+        <button *ngIf="element.orderStatus == 'Placed'" mat-raised-button color="primary" (click)="markAsDelivered(element.orderId)">Mark as Delivered</button>  
       </td>
     </ng-container>
-  
+
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
   </table>  

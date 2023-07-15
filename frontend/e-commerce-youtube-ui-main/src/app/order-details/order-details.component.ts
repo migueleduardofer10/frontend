@@ -8,7 +8,7 @@ import { ProductService } from '../_services/product.service';
 })
 export class OrderDetailsComponent implements OnInit {
 
-  displayedColumns: string[] = ['Id', 'Product Name', 'Name', 'Address', 'Contact No.', 'Status', 'Action'];
+  displayedColumns: string[] = ['Id', 'Product Id', 'User Name', 'Address', 'Contact No.', 'Status', 'Action'];
   dataSource = [];
 
   status: string = 'All';

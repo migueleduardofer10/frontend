@@ -5,17 +5,21 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { OrderDetails } from '../_model/order-details.model';
 import { Product } from '../_model/product.model';
 import { ProductService } from '../_services/product.service';
+import { UserService } from '../_services/user.service';
+import { User } from '../_model/user.model';
 
 declare var paypal: any;
+
 @Component({
   selector: 'app-buy-product',
   templateUrl: './buy-product.component.html',
   styleUrls: ['./buy-product.component.css']
 })
 export class BuyProductComponent implements OnInit {
+  userName: string;
 
-  isSingleProductCheckout: string = '';
-  productDetails: Product[] = [] ;
+  isSingleProductCheckout: boolean = false;
+  productDetails: Product[] = [];
 
   orderDetails: OrderDetails = {
     fullName: '',
@@ -24,46 +28,58 @@ export class BuyProductComponent implements OnInit {
     alternateContactNumber: '',
     transactionId: '',
     orderProductQuantityList: []
-  }
+  };
 
-  constructor(private activatedRoute: ActivatedRoute,
+  constructor(
+    private activatedRoute: ActivatedRoute,
     private productService: ProductService,
+    private userService: UserService,
     private router: Router,
-    private injector: Injector) { }
+    private injector: Injector
+  ) {}
 
   ngOnInit(): void {
     this.productDetails = this.activatedRoute.snapshot.data['productDetails'];
-    this.isSingleProductCheckout = this.activatedRoute.snapshot.paramMap.get("isSingleProductCheckout");
-    
-    this.productDetails.forEach(
-      x => this.orderDetails.orderProductQuantityList.push(
-        {productId: x.productId, quantity: 1}
-      )
+    this.isSingleProductCheckout =
+      this.activatedRoute.snapshot.paramMap.get('isSingleProductCheckout') === 'true';
+
+    this.productDetails.forEach((x) =>
+      this.orderDetails.orderProductQuantityList.push({ productId: x.productId, quantity: 1 })
     );
 
-    console.log(this.productDetails)
+    console.log(this.productDetails);
     console.log(this.orderDetails);
+    this.getCurrentUser();
   }
 
   public placeOrder(orderForm: NgForm) {
-    this.productService.placeOrder(this.orderDetails, this.isSingleProductCheckout).subscribe(
-      (resp) => {
-        console.log(resp);
-        orderForm.reset();
+    console.log(orderForm.value);
+    console.log(this.orderDetails);
+    this.productService
+      .placeOrder(this.userName, this.orderDetails, this.isSingleProductCheckout)
+      .subscribe(
+        (response) => {
+          console.log(response);
+          this.router.navigate(["/orderConfirm"]);
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+  }
 
-        const ngZone = this.injector.get(NgZone);
-        ngZone.run(
-          () => {
-            this.router.navigate(["/orderConfirm"]);
-          }
-        );
-      },
-      (err) => {
-        console.log(err);
+  getCurrentUser() {
+    this.userService.getCurrentUser().subscribe(
+      (response: User) => {
+        // Imprimir solo el nombre del usuario
+        this.userName = response.userName;
+        console.log(this.userName); 
+      }, 
+      (error) => {
+        console.log(error);
       }
     );
   }
-
 
   getQuantityForProduct(productId) {
     const filteredProduct = this.orderDetails.orderProductQuantityList.filter(
@@ -90,12 +106,11 @@ export class BuyProductComponent implements OnInit {
   getCalculatedGrandTotal() {
     let grandTotal = 0;
 
-    this.orderDetails.orderProductQuantityList.forEach(
-      (productQuantity) => {
-        const price = this.productDetails.filter(product => product.productId === productQuantity.productId)[0].productDiscountedPrice;
-        grandTotal = grandTotal + price * productQuantity.quantity;
-      }
-    );
+    this.orderDetails.orderProductQuantityList.forEach((productQuantity) => {
+      const price = this.productDetails.find((product) => product.productId === productQuantity.productId)
+        .productDiscountedPrice;
+      grandTotal += price * productQuantity.quantity;
+    });
 
     return grandTotal;
   }
@@ -105,26 +120,27 @@ export class BuyProductComponent implements OnInit {
     this.productService.createTransaction(amount).subscribe(
       (response) => {
         console.log(response);
-        this.openTransactioModal(response, orderForm);
+        this.openTransactionModal(response, orderForm);
       },
       (error) => {
         console.log(error);
       }
     );
-
   }
 
-  openTransactioModal(response: any, orderForm: NgForm) {
+  openTransactionModal(response: any, orderForm: NgForm) {
     const totalAmount = this.getCalculatedGrandTotal();
     paypal.Buttons({
       createOrder: (data, actions) => {
         return actions.order.create({
-          purchase_units: [{
-            amount: {
-              value: totalAmount,
-              currency: 'USD'  // Use your desired currency
+          purchase_units: [
+            {
+              amount: {
+                value: totalAmount,
+                currency: 'USD' // Use your desired currency
+              }
             }
-          }]
+          ]
         });
       },
       onApprove: (data, actions) => {
@@ -136,13 +152,12 @@ export class BuyProductComponent implements OnInit {
       },
       onError: (err) => {
         console.log(err);
-        alert('Payment failed..')
+        alert('Payment failed..');
       }
     }).render('#paypal-button-container');
   }
 
-
-  processResponse(resp: any, orderForm:NgForm) {
+  processResponse(resp: any, orderForm: NgForm) {
     this.orderDetails.transactionId = resp.razorpay_payment_id;
     this.placeOrder(orderForm);
   }

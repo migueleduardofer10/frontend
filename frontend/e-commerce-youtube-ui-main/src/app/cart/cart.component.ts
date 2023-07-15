@@ -23,23 +23,41 @@ export class CartComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.getCurrentUser();
+    this.getCartDetails();
   }
-
+  
   delete(cartId: any) {
     console.log(cartId);
     this.productService.deleteCartItem(cartId).subscribe(
       (resp) => {
         console.log(resp);
-        this.getCartDetails(this.userName);
+        this.getCartDetails();
       },
       (err) => {
         console.log(err);
       }
     );
   }
-
-  getCartDetails(userName: string) {
+  
+  getCartDetails() {
+    this.getCurrentUser();
+  }
+  
+  getCurrentUser() {
+    this.userService.getCurrentUser().subscribe(
+      (response: User) => {
+        // Imprimir solo el nombre del usuario
+        this.userName = response.userName;
+        console.log(this.userName);
+        this.loadCartDetails(this.userName);
+      },
+      (error) => {
+        console.log(error);
+      }
+    );
+  }
+  
+  loadCartDetails(userName: string) {
     console.log(userName);
     this.productService.getCartDetails(userName).subscribe(
       (response: any[]) => {
@@ -50,21 +68,8 @@ export class CartComponent implements OnInit {
         console.log(error);
       }
     );
-}
-
-  getCurrentUser() {
-    this.userService.getCurrentUser().subscribe(
-      (response: User) => {
-        // Imprimir solo el nombre del usuario
-        this.userName = response.userName;
-        console.log(this.userName);
-        this.getCartDetails(this.userName); // Llamar a getCartDetails() después de obtener el nombre de usuario
-      },
-      (error) => {
-        console.log(error);
-      }
-    );
   }
+  
 
   checkout() {
     this.router.navigate(['/buyProduct'], {

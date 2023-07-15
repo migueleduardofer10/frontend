@@ -14,19 +14,19 @@ export class ProductService {
   constructor(private httpClient: HttpClient) { }
 
   public createTransaction(amount) {
-    return this.httpClient.get("http://localhost:9090/transactions/" + amount);
+    return this.httpClient.get("http://localhost:8180/transactions/" + amount);
   }
 
   public markAsDelivered(orderId) {
-      return this.httpClient.get("http://localhost:9090/orders/" + orderId + "/deliver");
+    return this.httpClient.put(`http://localhost:8081/orders/${orderId}/deliver`, {});
   }
 
   public getAllOrderDetailsForAdmin(status: string): Observable<MyOrderDetails[]> {
-    return this.httpClient.get<MyOrderDetails[]>("http://localhost:9090/orders/" + status);
+    return this.httpClient.get<MyOrderDetails[]>("http://localhost:8081/orders/status/" + status);
   }
 
-  public getMyOrders(): Observable<MyOrderDetails[]> {
-    return this.httpClient.get<MyOrderDetails[]>("http://localhost:9090/orders");
+  public getMyOrders(userName: string): Observable<MyOrderDetails[]> {
+    return this.httpClient.get<MyOrderDetails[]>("http://localhost:8081/orders/" + userName);
   }
 
   public deleteCartItem(cartId) {
@@ -53,9 +53,10 @@ export class ProductService {
     return this.httpClient.get<Product[]>("http://localhost:9090/products/" + isSingleProductCheckout + "/" + productId);
   }
 
-  public placeOrder(orderDetails: OrderDetails, isCartCheckout) {
-    return this.httpClient.post("http://localhost:9090/orders/" + isCartCheckout, orderDetails);
-  }
+  public placeOrder(userName: string, orderDetails: OrderDetails, isCartCheckout: boolean): Observable<void> {
+    return this.httpClient.post<void>(`http://localhost:8081/orders/${userName}/${isCartCheckout}`, orderDetails);
+}
+
 
   addToCart(userName: string, productId: number) {
     console.log(productId);
